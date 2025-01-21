@@ -1,52 +1,49 @@
-# Schedule Surfer - UCSD Course Scraper
+# 🌊 Schedule Surfer - UCSD Course Scraper
 
-A Python-based web scraper for UCSD's Schedule of Classes that extracts detailed course information and stores it in Airtable for better organization and accessibility.
+A powerful data automation tool that surfs through UCSD's Schedule of Classes, efficiently extracting and parsing course information. Built with modern web automation technologies, Schedule Surfer transforms raw HTML data into structured records in Airtable for seamless analysis and integration.
 
-## Features
+## 🎯 Current Capabilities
 
-- Scrapes course data from UCSD's Schedule of Classes website
-- Handles multiple subjects and pagination
-- Extracts detailed course information including:
-  - Course number and name
-  - Subject code
-  - Units
-  - Multiple sections per course
-  - Meeting times and locations
-  - Instructor information
-  - Enrollment numbers (available/total seats)
-- Stores data in Airtable for easy access and organization
-- Handles various edge cases:
-  - Subjects with no courses
-  - Multiple pages of results
-  - Full sections
-  - Various meeting types (Lecture, Discussion, Seminar, etc.)
+The surfer currently navigates through:
+- AIP (Academic Internship Program)
+- AAS (African American Studies)
+- AWP (Analytical Writing Program)
+- ANES (Anesthesiology)
+- ANBI (Anthro/Biological Anthropology)
 
-## Requirements
+Successfully handling:
+- 🔄 Multiple pages of results
+- 🚫 "No classes found" scenarios
+- 📊 Various enrollment states (FULL/Available)
+- 📝 Different meeting types (Lecture, Discussion, Seminar)
 
-- Python 3.7+
-- Playwright
-- PyAirtable
-- python-dotenv
+## 🔄 Automation Pipeline
 
-## Installation
+The surfer implements a robust data pipeline:
 
-1. Clone the repository:
+- 🤖 **Automated Navigation**: Efficiently traverses the Schedule of Classes interface
+- 📊 **Intelligent Parsing**: Extracts structured data from complex HTML patterns
+- 🔍 **Data Validation**: Ensures accuracy of scraped information
+- 📥 **Automated Storage**: Direct integration with Airtable's API
+
+## 🚀 Setup
+
+1. **Clone Repository**
 ```bash
 git clone [your-repo-url]
-cd tritonscraper
+cd schedule-surfer
 ```
 
-2. Install dependencies:
+2. **Environment Setup**
 ```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-3. Install Playwright browsers:
-```bash
 playwright install
 ```
 
-4. Create a `.env` file with your Airtable credentials:
+3. **Airtable Configuration**
+Configure environment variables in `.env`:
 ```
 AIRTABLE_API_KEY=your_api_key
 AIRTABLE_BASE_ID=your_base_id
@@ -54,40 +51,37 @@ AIRTABLE_TABLE_NAME_COURSES=your_courses_table_id
 AIRTABLE_TABLE_NAME_SECTIONS=your_sections_table_id
 ```
 
-## Airtable Setup
+4. **Data Schema Setup**
 
-1. Create a new Airtable base
-2. Create two tables:
-   - Courses table with fields:
-     - Course Number (Single line text)
-     - Course Name (Single line text)
-     - Units (Single line text)
-     - Subject Code (Single line text)
-   - Sections table with fields:
-     - Section ID (Single line text)
-     - Meeting Type (Single line text)
-     - Days (Single line text)
-     - Time (Single line text)
-     - Building (Single line text)
-     - Room (Single line text)
-     - Instructor (Single line text)
-     - Available Seats (Number)
-     - Total Seats (Number)
-     - Course (Link to Courses table)
+📊 **Courses Schema**
+- Course Number (identifier)
+- Course Name
+- Units
+- Subject Code (e.g., AAS, AWP, ANBI)
 
-## Usage
+📋 **Sections Schema**
+- Section ID (unique identifier)
+- Meeting Type
+- Schedule (Days/Time)
+- Location
+- Instructor
+- Enrollment Data (Available/Total seats)
+- Course Reference
 
-Run the scraper:
+## ⚡ Execution
+
+Start surfing:
 ```bash
 python tritonscraper.py
 ```
 
-The script will:
-1. Navigate to UCSD's Schedule of Classes
-2. Scrape data for multiple subjects
-3. Upload the data to your Airtable base
-4. Handle pagination automatically
-5. Log progress and any errors
+The automation pipeline will execute, surfing through course data and populating your Airtable base with structured records.
+
+## 🛠 Technology Stack
+
+- **Python**: Core automation and data processing
+- **Playwright**: Headless browser automation
+- **PyAirtable**: Data storage and API integration
 
 ## Contributing
 
