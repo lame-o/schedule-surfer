@@ -7,6 +7,7 @@ from agentql.ext.playwright.sync_api import Page
 from playwright.sync_api import sync_playwright, TimeoutError
 from dotenv import load_dotenv
 from airtable_integration import AirtableManager
+from typing import List, Dict
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -19,9 +20,10 @@ os.environ["AGENTQL_API_KEY"] = os.getenv("AGENTQL_API_KEY")
 # Set the URL to the desired website
 URL = "https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudent.htm"
 
-def extract_course_data(page: Page):
+def extract_course_data(page: Page, subject_code: str = '') -> List[Dict]:
+    """Extract course data from the page."""
     try:
-        # Add debug logging for HTML content
+        # Get HTML content for debugging
         html_content = page.content()
         log.info("Page HTML content length: %d", len(html_content))
         log.info("Looking for table.tbrdr...")
@@ -44,7 +46,7 @@ def extract_course_data(page: Page):
         }""")
         log.info("Found %d rows in table", row_count)
         
-        courses = page.evaluate("""() => {
+        courses = page.evaluate("""(subject_code) => {
             const courses = [];
             let currentCourse = null;
             
@@ -82,6 +84,7 @@ def extract_course_data(page: Page):
                             name: courseNameCell.textContent.trim(),
                             number: courseNumberCell.textContent.trim(),
                             units: unitsText ? unitsText[1] : '',
+                            subject_code: subject_code,
                             sections: []
                         };
                     } else {
@@ -164,7 +167,7 @@ def extract_course_data(page: Page):
             
             console.log('Returning ' + courses.length + ' courses');
             return courses;
-        }""")
+        }""", subject_code)
         
         # Log the extracted data in a more structured way
         log.info(f"\nExtracted {len(courses)} courses:")
@@ -187,6 +190,23 @@ def extract_course_data(page: Page):
         log.error(f"Error extracting course data: {e}")
         log.exception("Stack trace:")
         return []
+
+def parse_enrollment(cell):
+    """Parse enrollment information from a cell."""
+    try:
+        text = cell.text_content().strip()
+        if 'FULL' in text:
+            available = 0
+            limit_cell = cell.locator('xpath=following-sibling::td[1]')
+            limit = int(limit_cell.text_content().strip()) if limit_cell.count() > 0 else 0
+        else:
+            available = int(text) if text.isdigit() else 0
+            limit_cell = cell.locator('xpath=following-sibling::td[1]')
+            limit = int(limit_cell.text_content().strip()) if limit_cell.count() > 0 else 0
+        return available, limit
+    except Exception as e:
+        log.error(f"Error parsing enrollment: {e}")
+        return 0, 0
 
 def handle_pagination(page: Page):
     try:
@@ -235,50 +255,131 @@ def get_all_subjects(page: Page):
         log.error(f"Error getting subjects: {e}")
         return []
 
-def select_subject_and_search(page: Page, subject_value: str, subject_text: str):
+def select_subject_and_search(page: Page, subject_value: str, subject_text: str) -> List[Dict]:
+    """Select a subject and click search."""
     try:
-        # Ensure we're on the search page
-        if not page.url.endswith(URL):
-            page.goto(URL)
-            time.sleep(1)  # Give the page a moment to load
+        # Go back to the main page
+        page.goto(URL)
+        page.wait_for_load_state('networkidle')
         
-        # Wait for the select element and its options to be available
-        select = page.wait_for_selector('select[name="selectedSubjects"]')
+        # Log the HTML for debugging
+        html_content = page.content()
+        log.info("Page HTML:")
+        log.info(html_content[:1000])  # First 1000 chars
         
-        # Select the subject using JavaScript
-        page.evaluate(f"""() => {{
-            const select = document.querySelector('select[name="selectedSubjects"]');
-            select.value = '{subject_value}';
-            select.dispatchEvent(new Event('change'));
-        }}""")
+        # Add a delay to see what's happening
+        time.sleep(2)
         
+        # Select the subject using the correct selector
+        subject_selector = page.locator("select[name='selectedSubjects']")
+        subject_selector.select_option(subject_value)
         log.info(f"Selected subject: {subject_text}")
         
-        # Wait for and click the search button
-        search_button = page.wait_for_selector('#socFacSubmit')
-        if search_button:
-            search_button.click()
-            log.info("Clicked search button")
-        else:
-            log.error("Search button not found")
-            return
+        # Add another delay
+        time.sleep(2)
         
-        # Wait for navigation
-        try:
-            page.wait_for_load_state('networkidle', timeout=20000)
-            log.info(f"Current URL: {page.url}")
-            log.info(f"Page title: {page.title()}")
-            
-            # Handle pagination after successful search
-            courses = handle_pagination(page)
-            return courses
-        except TimeoutError:
-            log.error("Navigation timeout - skipping to next subject")
-        except Exception as e:
-            log.error(f"Error during search: {e}")
+        # Click search using the correct selector
+        search_button = page.locator("#socFacSubmit")
+        search_button.click()
+        log.info("Clicked search button")
+        
+        # Wait for results to load
+        page.wait_for_load_state('networkidle')
+        
     except Exception as e:
         log.error(f"Error in select_subject_and_search: {e}")
-    return []
+
+def scrape_courses(page: Page, airtable: AirtableManager):
+    try:
+        # Navigate to initial page
+        page.goto("https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudent.htm")
+        logging.info("Navigated to initial page")
+
+        # Get all subjects
+        subjects = get_all_subjects(page)
+        subject_count = len(subjects)
+        logging.info(f"Found {subject_count} subjects")
+
+        # Define the subjects to test (up to ANBI)
+        test_subjects = []
+        for subject in subjects:
+            subject_text = subject['text']
+            if subject_text.startswith("ANBI"):
+                test_subjects.append(subject)
+                break
+            test_subjects.append(subject)
+        
+        logging.info(f"Testing {len(test_subjects)} subjects: {', '.join(s['text'] for s in test_subjects)}")
+
+        # Process each subject
+        for subject in test_subjects:
+            try:
+                logging.info(f"Processing subject: {subject['text']}")
+                
+                # Extract subject code from the text (e.g., "AAS - African American Studies" -> "AAS")
+                subject_code = subject['text'].split(' - ')[0]
+                
+                # Select the subject and search
+                select_subject_and_search(page, subject['value'], subject['text'])
+                logging.info(f"Selected subject: {subject['text']}")
+                
+                # Wait for page load
+                page.wait_for_load_state('networkidle')
+                
+                # Log current state
+                current_url = page.url
+                page_title = page.title()
+                html_content = page.content()
+                logging.info(f"Current URL: {current_url}")
+                logging.info(f"Page title: {page_title}")
+                logging.info(f"Page HTML content length: {len(html_content)}")
+                
+                # Check for "No classes found" message
+                no_results = page.query_selector('td.NoClasses')
+                if no_results and "No classes found" in no_results.text_content():
+                    logging.info(f"No classes found for subject: {subject['text']}")
+                    continue
+                
+                # Process all pages for this subject
+                while True:
+                    # Extract courses from current page
+                    courses = extract_course_data(page, subject_code)
+                    if courses:
+                        logging.info(f"\nExtracted {len(courses)} courses from {subject['text']}:")
+                        for course in courses:
+                            logging.info(f"\nCourse: {course['number']} - {course['name']}")
+                            logging.info(f"  Units: {course['units']}")
+                            logging.info(f"  Total Sections: {len(course['sections'])}")
+                            for section in course['sections']:
+                                logging.info(f"    Section {section['sectionId']}:")
+                                logging.info(f"      Type: {section['meetingType']}")
+                                logging.info(f"      Days: {section['days']}")
+                                logging.info(f"      Time: {section['time']}")
+                                logging.info(f"      Location: {section['building']} {section['room']}")
+                                logging.info(f"      Instructor: {section['instructor']}")
+                                logging.info(f"      Seats: {section['available']}/{section['limit']} available")
+                        
+                        # Upload to Airtable
+                        logging.info("\nUploading courses to Airtable...")
+                        airtable.upload_courses(courses)
+                    
+                    # Check for next page
+                    next_page = page.query_selector("input[value='Next']")
+                    if next_page and not next_page.is_disabled():
+                        next_page.click()
+                        page.wait_for_load_state('networkidle')
+                        logging.info("Moved to next page")
+                    else:
+                        break
+                
+            except Exception as e:
+                logging.error(f"Error processing subject {subject['text']}: {e}")
+                logging.exception("Stack trace:")
+                continue
+
+    except Exception as e:
+        logging.error(f"Error in scrape_courses: {e}")
+        logging.exception("Stack trace:")
 
 def main():
     try:
@@ -289,41 +390,8 @@ def main():
             browser = p.chromium.launch(headless=False)
             page = browser.new_page()
             
-            # Navigate to the initial page
-            page.goto(URL)
-            page.wait_for_load_state('networkidle')
-            log.info("Navigated to initial page")
-            
-            # Get all subjects
-            subjects = get_all_subjects(page)
-            log.info(f"Found {len(subjects)} subjects")
-            
-            # For testing, just process AAS
-            test_subject = next(s for s in subjects if s['text'].startswith('AAS'))
-            log.info(f"Testing with subject: {test_subject['text']}")
-            
-            # Select subject and search
-            select_subject_and_search(page, test_subject['value'], test_subject['text'])
-            
-            # Wait for page to load after search
-            page.wait_for_load_state('networkidle')
-            
-            # Extract course data
-            courses = extract_course_data(page)
-            
-            # Print summary of extracted data
-            log.info("\nExtracted Course Data Summary:")
-            log.info(f"Found {len(courses)} courses")
-            for course in courses:
-                log.info(f"Course: {course['number']} - {course['name']} ({len(course['sections'])} sections)")
-            
-            # Upload courses to Airtable
-            if courses:
-                log.info("\nUploading courses to Airtable...")
-                airtable.upload_courses(courses)
-                log.info("Successfully uploaded all courses to Airtable")
-            else:
-                log.warning("No courses found to upload")
+            # Scrape courses
+            scrape_courses(page, airtable)
             
             browser.close()
             

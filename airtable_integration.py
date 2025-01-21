@@ -41,6 +41,7 @@ class AirtableManager:
                 'Course Number': course['number'],
                 'Course Name': course['name'],
                 'Units': course.get('units', 'N/A'),
+                'Subject Code': course.get('subject_code', 'N/A'),
             }
             
             # Create course record
