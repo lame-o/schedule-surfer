@@ -1,10 +1,10 @@
-# 🎓 UCSD Schedule Scraper
+# 🌊 Schedule Surfer
 
-An automated data extraction tool that efficiently scrapes and parses course information from UCSD's Schedule of Classes. Built with modern web automation technologies, it transforms raw HTML data into structured records in Airtable for seamless analysis and integration.
+A powerful data automation tool that surfs through UCSD's Schedule of Classes, efficiently extracting and parsing course information. Built with modern web automation technologies, Schedule Surfer transforms raw HTML data into structured records in Airtable for seamless analysis and integration.
 
 ## 🔄 Automation Pipeline
 
-The scraper implements a robust data pipeline:
+The surfer implements a robust data pipeline:
 
 - 🤖 **Automated Navigation**: Efficiently traverses the Schedule of Classes interface
 - 📊 **Intelligent Parsing**: Extracts structured data from complex HTML patterns
@@ -16,7 +16,7 @@ The scraper implements a robust data pipeline:
 1. **Clone Repository**
 ```bash
 git clone [your-repo-url]
-cd tritonscraper
+cd schedule-surfer
 ```
 
 2. **Environment Setup**
@@ -53,12 +53,12 @@ AIRTABLE_TABLE_NAME_SECTIONS=your_sections_table_id
 
 ## ⚡ Execution
 
-Initialize the scraper:
+Start surfing:
 ```bash
 python tritonscraper.py
 ```
 
-The automation pipeline will execute, extracting course data and populating your Airtable base with structured records.
+The automation pipeline will execute, surfing through course data and populating your Airtable base with structured records.
 
 ## 🛠 Technology Stack
 
