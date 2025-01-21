@@ -1,15 +1,12 @@
-# 🌊 Schedule Surfer - UCSD Course Scraper
+# 🌊 Schedule Surfer
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A powerful data automation tool that surfs through UCSD's Schedule of Classes, efficiently extracting and parsing course information. Built with modern web automation technologies, Schedule Surfer transforms raw HTML data into structured records in Airtable for seamless analysis and integration.
 
 ## 🎯 Current Capabilities
 
-The surfer currently navigates through:
-- AIP (Academic Internship Program)
-- AAS (African American Studies)
-- AWP (Analytical Writing Program)
-- ANES (Anesthesiology)
-- ANBI (Anthro/Biological Anthropology)
+The surfer navigates through UCSD's course catalog, designed to be easily expandable to cover any number of subjects. Currently configured to process multiple subjects sequentially, demonstrating robust handling of various course data patterns.
 
 Successfully handling:
 - 🔄 Multiple pages of results
@@ -86,7 +83,3 @@ The automation pipeline will execute, surfing through course data and populating
 ## Contributing
 
 Feel free to open issues or submit pull requests with improvements.
-
-## License
-
-[Your chosen license]
