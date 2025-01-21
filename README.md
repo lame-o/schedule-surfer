@@ -1,35 +1,33 @@
-# UCSD Schedule of Classes Scraper
+# 📚 UCSD Schedule Scraper
 
-A Python-based web scraper that extracts course data from UCSD's Schedule of Classes and stores it in Airtable for better organization and readability.
+Say goodbye to endless clicking through UCSD's Schedule of Classes! This smart scraper automatically gathers course data and presents it beautifully in Airtable, making course planning a breeze.
 
-## Features
+## ✨ What It Does
 
-- Scrapes course data from UCSD's Schedule of Classes using Playwright
-- Stores data in Airtable with a clean, organized structure
-- Captures detailed information for both courses and sections:
-  - Course level: number, name, units
-  - Section level: section ID, meeting type, days, time, location, instructor, seat availability
+This tool transforms messy course data into organized, easy-to-read information in Airtable:
 
-## Setup
+- 🎯 **Course Details**: Numbers, names, and unit counts
+- 📅 **Section Info**: Meeting times, locations, and instructors
+- 💺 **Real-time Availability**: Track open seats and enrollment limits
+- 🔄 **Automated Updates**: Just run and watch your Airtable fill up
 
-1. Clone the repository:
+## 🚀 Quick Start
+
+1. **Get the code**
 ```bash
 git clone [your-repo-url]
 cd tritonscraper
 ```
 
-2. Create and activate a virtual environment:
+2. **Set up your environment**
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows use: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
 pip install -r requirements.txt
 ```
 
-4. Set up your environment variables in a `.env` file:
+3. **Configure Airtable**
+Create a `.env` file with your Airtable credentials:
 ```
 AIRTABLE_API_KEY=your_api_key
 AIRTABLE_BASE_ID=your_base_id
@@ -37,47 +35,33 @@ AIRTABLE_TABLE_NAME_COURSES=your_courses_table_id
 AIRTABLE_TABLE_NAME_SECTIONS=your_sections_table_id
 ```
 
-5. Set up your Airtable base with two tables:
+4. **Set up your Airtable tables**
 
-Courses table with fields:
-- Course Number (Single line text)
-- Course Name (Single line text)
-- Units (Single line text)
+📘 **Courses Table**
+- Course Number
+- Course Name
+- Units
 
-Sections table with fields:
-- Section ID (Single line text)
-- Meeting Type (Single line text)
-- Days (Single line text)
-- Time (Single line text)
-- Building (Single line text)
-- Room (Single line text)
-- Instructor (Single line text)
-- Available Seats (Number)
-- Seat Limit (Number)
-- Course Link (Link to Courses table)
+📗 **Sections Table**
+- Section ID
+- Meeting Type
+- Days & Time
+- Location (Building + Room)
+- Instructor
+- Seat Availability
+- Course Link (connects to Courses table)
 
-## Usage
+## 🎮 Usage
 
-Run the scraper:
+Just run:
 ```bash
 python tritonscraper.py
 ```
 
-The script will:
-1. Navigate to UCSD's Schedule of Classes
-2. Extract course data for the specified subject
-3. Upload the data to your Airtable base
+Then sit back and watch as your Airtable fills up with neatly organized course data! 
 
-## Dependencies
+## 🛠 Tech Stack
 
-- Playwright: Web scraping and browser automation
-- PyAirtable: Airtable API integration
-- python-dotenv: Environment variable management
-
-## Contributing
-
-Feel free to open issues or submit pull requests with improvements.
-
-## License
-
-[Your chosen license]
+- **Playwright**: Handles the web scraping magic
+- **PyAirtable**: Keeps your data organized
+- **python-dotenv**: Manages your secrets
