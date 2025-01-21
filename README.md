@@ -9,10 +9,12 @@ A powerful data automation tool that surfs through UCSD's Schedule of Classes, e
 The surfer navigates through UCSD's course catalog, designed to be easily expandable to cover any number of subjects. Currently configured to process multiple subjects sequentially, demonstrating robust handling of various course data patterns.
 
 Successfully handling:
-- 🔄 Multiple pages of results
+- 🔄 Complete pagination across all result pages
 - 🚫 "No classes found" scenarios
 - 📊 Various enrollment states (FULL/Available)
 - 📝 Different meeting types (Lecture, Discussion, Seminar)
+- 📚 Multiple sections per course
+- 🔍 Comprehensive data extraction across all pages
 
 ## 🔄 Automation Pipeline
 
@@ -22,6 +24,7 @@ The surfer implements a robust data pipeline:
 - 📊 **Intelligent Parsing**: Extracts structured data from complex HTML patterns
 - 🔍 **Data Validation**: Ensures accuracy of scraped information
 - 📥 **Automated Storage**: Direct integration with Airtable's API
+- 📄 **Multi-page Handling**: Captures all course data across paginated results
 
 ## 🚀 Setup
 
@@ -72,14 +75,10 @@ Start surfing:
 python tritonscraper.py
 ```
 
-The automation pipeline will execute, surfing through course data and populating your Airtable base with structured records.
+The automation pipeline will execute, surfing through course data and populating your Airtable base with structured records from all available pages.
 
 ## 🛠 Technology Stack
 
 - **Python**: Core automation and data processing
 - **Playwright**: Headless browser automation
 - **PyAirtable**: Data storage and API integration
-
-## Contributing
-
-Feel free to open issues or submit pull requests with improvements.

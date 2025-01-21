@@ -292,14 +292,14 @@ def select_subject_and_search(page: Page, subject_value: str, subject_text: str)
 def scrape_courses(page: Page, airtable: AirtableManager):
     try:
         # Navigate to initial page
-        page.goto("https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudent.htm")
-        logging.info("Navigated to initial page")
-
+        page.goto(URL)
+        page.wait_for_load_state('networkidle')
+        
         # Get all subjects
         subjects = get_all_subjects(page)
         subject_count = len(subjects)
-        logging.info(f"Found {subject_count} subjects")
-
+        log.info(f"Found {subject_count} subjects")
+        
         # Define the subjects to test (up to ANBI)
         test_subjects = []
         for subject in subjects:
@@ -310,7 +310,7 @@ def scrape_courses(page: Page, airtable: AirtableManager):
             test_subjects.append(subject)
         
         logging.info(f"Testing {len(test_subjects)} subjects: {', '.join(s['text'] for s in test_subjects)}")
-
+        
         # Process each subject
         for subject in test_subjects:
             try:
@@ -341,6 +341,7 @@ def scrape_courses(page: Page, airtable: AirtableManager):
                     continue
                 
                 # Process all pages for this subject
+                current_page = 1
                 while True:
                     # Extract courses from current page
                     courses = extract_course_data(page, subject_code)
@@ -363,20 +364,24 @@ def scrape_courses(page: Page, airtable: AirtableManager):
                         logging.info("\nUploading courses to Airtable...")
                         airtable.upload_courses(courses)
                     
-                    # Check for next page
-                    next_page = page.query_selector("input[value='Next']")
-                    if next_page and not next_page.is_disabled():
-                        next_page.click()
+                    # Check for next page link
+                    current_page += 1
+                    next_page_link = page.query_selector(f"a[href*='page={current_page}']")
+                    
+                    if next_page_link:
+                        logging.info(f"Moving to page {current_page}")
+                        next_page_link.click()
                         page.wait_for_load_state('networkidle')
-                        logging.info("Moved to next page")
+                        page.wait_for_selector('table.tbrdr', state='visible', timeout=10000)
                     else:
+                        logging.info("No more pages, moving to next subject")
                         break
                 
             except Exception as e:
                 logging.error(f"Error processing subject {subject['text']}: {e}")
                 logging.exception("Stack trace:")
                 continue
-
+                
     except Exception as e:
         logging.error(f"Error in scrape_courses: {e}")
         logging.exception("Stack trace:")
