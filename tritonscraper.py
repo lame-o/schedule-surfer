@@ -300,11 +300,11 @@ def scrape_courses(page: Page, airtable: AirtableManager):
         subject_count = len(subjects)
         log.info(f"Found {subject_count} subjects")
         
-        # Define the subjects to test (up to ANBI)
+        # Define the subjects to test (up to WES)
         test_subjects = []
         for subject in subjects:
             subject_text = subject['text']
-            if subject_text.startswith("ANBI"):
+            if subject_text.startswith("WES"):
                 test_subjects.append(subject)
                 break
             test_subjects.append(subject)

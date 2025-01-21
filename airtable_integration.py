@@ -36,6 +36,18 @@ class AirtableManager:
     def create_course(self, course: Dict) -> str:
         """Create a course record in Airtable and return its ID."""
         try:
+            # Check if course has any Lecture or Discussion sections
+            has_valid_sections = False
+            for section in course.get('sections', []):
+                meeting_type = section['meetingType'].upper()
+                if meeting_type in ['LECTURE', 'DISCUSSION', 'LE', 'DI']:
+                    has_valid_sections = True
+                    break
+            
+            if not has_valid_sections:
+                log.info(f"Skipping course {course['number']} - no Lecture or Discussion sections")
+                return None
+            
             # Clean up course data
             course_data = {
                 'Course Number': course['number'],
@@ -53,9 +65,15 @@ class AirtableManager:
             log.error(f"Error creating course {course.get('number', 'unknown')}: {e}")
             return None
     
-    def create_section(self, section: Dict, course_id: str) -> str:
+    def create_section(self, section: Dict, course_id: str, course: Dict) -> str:
         """Create a section record in Airtable and return its ID."""
         try:
+            # Only process Lecture and Discussion sections
+            meeting_type = section['meetingType'].upper()
+            if meeting_type not in ['LECTURE', 'DISCUSSION', 'LE', 'DI']:
+                log.info(f"Skipping section {section['sectionId']} with meeting type {meeting_type}")
+                return None
+            
             # Clean up section data
             section_data = {
                 'Section ID': section['sectionId'],
@@ -67,7 +85,8 @@ class AirtableManager:
                 'Instructor': section['instructor'],
                 'Available Seats': section.get('available', 0),
                 'Seat Limit': section.get('limit', 0),
-                'Course Link': [course_id]  # Link to the parent course
+                'Course Link': [course_id],  # Link to the parent course
+                'Subject Code': course.get('subject_code', 'N/A'),  # Add subject code from course
             }
             
             # Create section record
@@ -91,7 +110,7 @@ class AirtableManager:
                 
                 # Create section records
                 for section in course['sections']:
-                    self.create_section(section, course_id)
+                    self.create_section(section, course_id, course)
             log.info("Finished uploading courses to Airtable")
                     
         except Exception as e:
